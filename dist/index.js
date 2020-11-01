@@ -8,7 +8,7 @@ var uiConfig = {
       
       
       const newUser = authResult.additionalUserInfo.isNewUser
-      if (true ) {
+      if ( newUser ) {
         console.log( 'new user!')
         
         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
@@ -17,7 +17,7 @@ var uiConfig = {
             console.log('ID TOKEN', idToken);
         
             const body = {
-              idToken: authResult.credential.idToken,
+              idToken: idToken,
               profile: authResult.additionalUserInfo.profile
             }
             return axios.post('/user', body);
@@ -136,3 +136,6 @@ firebase.auth().onAuthStateChanged(function(user) {
   // };
 
   // ui.start('#firebaseui-auth-container', uiConfig);
+
+
+  //okay now I just need to serve data if not logged in.
