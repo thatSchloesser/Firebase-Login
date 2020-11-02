@@ -19,9 +19,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
-
+//send homepage (could use express.static)
 app.get('/', (req, res) => {
   console.log('in /')
+  console.log(req)
 
   console.log('sent root');
   res.sendFile(
@@ -29,7 +30,14 @@ app.get('/', (req, res) => {
   );
 });
 
+//redirect test
+// app.get('/routes/redirect.html', (req, res) => {
+//   console.log('in redirect')
+//   res.redirect(301, '/');
+// });
 
+//AUTH:
+//CREATE USER: 
 app.post('/user', (req, res) => {
   console.log('in users post')
   console.log(req.body)
@@ -46,17 +54,20 @@ app.post('/user', (req, res) => {
     }).catch(function(error) {
       //user not verified error don't persist.
       console.log('error', error)
+
+      // unhandled promise rejection warning
+        //HANDLE THIS VIA RESOLVING OR SOMETHING. FIX WARNING> 
       Promise.reject(error);
     }).then((value) => {
       //INSERT INTO OUR DATABASE HERE
 
       console.log('value in chain', value)
+      res.redirect(301, '/routes/redirect.html');
+      console.log('redirected?')
     })
 
 
-    
 
-  res.sendStatus(200);
 });
 
 // quick wildcard optimzation:
@@ -74,16 +85,12 @@ app.get('*', (req, res) => {
     const fileArray = files.filter((file) => file !== 'index.html');
 
     if (fileArray.includes(route)) {
-      // If the first part of the route is in the files array its
-      // either a file or a folder, we try to send them the file in the
-      // code below.
 
       const tempFilePath = path.join(
         __dirname, `../dist/${req.params['0']}`,
       ); // Set the file path
 
-      // Check if file exists. If it does send the file, otherwise send
-      // a 404 and console.log an error.
+      // Check if file exists. 
       fs.access(tempFilePath, fs.F_OK, (fsErr) => {
         if (fsErr) {
           console.error(fsErr);
@@ -94,18 +101,12 @@ app.get('*', (req, res) => {
         }
       });
     } else {
-      // Otherwise route to React website.
-      // COULD handle 404 NOT FOUND here... but easier to do with react-router
       res.sendFile(
         path.join(__dirname, '../dist/index.html'),
-      ); // NOTE: this will send a request for bundle.js, which is handled above.
+      );
     }
   });
 });
-
-console.log('listening on port', process.env.PORT || 8080);
-app.listen(process.env.PORT || 8080);
-
 
 
 
@@ -116,3 +117,62 @@ app.listen(process.env.PORT || 8080);
 // }).catch(function(error) {
 //   // Handle error
 // });
+
+
+
+
+//TODO: serve site based on login. 
+
+  //IF LOGGED IN: 
+    //serve login
+
+  //IF NOT LOGGED IN
+    //literally just redirect. 
+  
+  //-> how do I efficiently set this up site-wide?
+
+
+
+
+//put in separate file?
+  //just use req.setCookie or something
+
+function setCookie(idToken, res) {
+  // Set session expiration to 5 days.
+  // Create the session cookie. This will also verify the ID token in the process.
+  // The session cookie will have the same claims as the ID token.
+  
+  const expiresIn = 60 * 60 * 24 * 5 * 1000;
+  admin.auth().createSessionCookie(idToken, {expiresIn}).then((sessionCookie) => {
+    
+    // Set cookie policy for session cookie and set in response.
+    const options = {maxAge: expiresIn, httpOnly: true, secure: true};
+    res.cookie('__session', sessionCookie, options);
+    
+    admin.auth().verifyIdToken(idToken).then(function(decodedClaims) {
+      res.redirect('/newPage');
+    });
+      
+  }, error => {
+    res.status(401).send('UNAUTHORIZED REQUEST!');
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+console.log('listening on port', process.env.PORT || 8080);
+app.listen(process.env.PORT || 8080);
