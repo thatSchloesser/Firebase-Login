@@ -1,4 +1,5 @@
 (function(){
+
   console.log('hi from script')
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
@@ -13,6 +14,8 @@
     };
 
   firebase.initializeApp(firebaseConfig);
+    // As httpOnly cookies are to be used, do not persist any state client side.
+  firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
 
   var uiConfig = {
     callbacks: {
@@ -20,41 +23,43 @@
         console.log(authResult)
         console.log(JSON.stringify(authResult))
   
-        const newUser = true;
-        // const newUser = authResult.additionalUserInfo.isNewUser
-        if ( newUser ) {
-          console.log( 'new user!')
-          
-          firebase.auth().currentUser.getIdToken(true).then((idToken) => {
-              // Send token to your backend via HTTPS
-              // ...
-              console.log('ID TOKEN', idToken);
-          
+        let idToken = null;
+
+        firebase.auth().currentUser.getIdToken(true)
+          .then((id) => {
+            //get cookie
+            idToken = id;
+            console.log('ID TOKEN', idToken);
+            return axios.post('/cookie', { idToken }, { withCredentials: true });
+          })
+          .then((cookie) => {
+            console.log('got cookie?')
+            // document.cookie = 
+            console.log(cookie)
+            const newUser = authResult.additionalUserInfo.isNewUser
+            if ( newUser ) {
+              console.log( 'new user!')
               const body = {
                 idToken: idToken,
                 profile: authResult.additionalUserInfo.profile
               }
               return axios.post('/user', body);
-
-            }).then(()=>{
-              console.log('posted user!')
-            })
-            .catch(function(error) {
-              // Handle error
-            });
-        } else {
-          console.log('not new user')
-
-          //TODO - still need to set cookie
-        }
-        
-        //pass authentication.idToken
-        //pass other data that I want to post method
-  
-        // User successfully signed in.
+            } else {
+              console.log('not new user')
+            }
+          })
+          .then(() => {
+            
+            console.log('posted user!')
+          })
+          .catch(function(error) {
+          // Handle error
+            console.log('LOGIN FLOW ERROR', error);
+          });
         // Return type determines whether we continue the redirect automatically
         // or whether we leave that to developer to handle.
-        return true;
+          //TODO / note: if i want to redirect with express, try to return false here
+        return false;
       },
       uiShown: function() {
         // The widget is rendered.
@@ -64,7 +69,7 @@
     },
     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
     signInFlow: 'popup',
-    signInSuccessUrl: '/routes/redirect.html',
+    // signInSuccessUrl: '/routes/redirect',
     signInOptions: [
       // Leave the lines as is for the providers you want to offer your users.
       firebase.auth.GoogleAuthProvider.PROVIDER_ID,
@@ -80,9 +85,3 @@
     console.log("AUTH STATE CHANGE");
   });
 }())
-
-
-  // ui.start('#firebaseui-auth-container', uiConfig);
-
-
-  //okay now I just need to serve data if not logged in.
