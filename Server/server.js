@@ -40,7 +40,7 @@ function checkCookieMiddleware(req, res, next) {
 		.catch(error => {
       console.log('NO COOKIE ERROR, REDIRECT')
 			// Session cookie is unavailable or invalid. Force user to login.
-			// res.redirect('/');
+			res.redirect('/');
 		});
 }
 
@@ -130,7 +130,7 @@ app.post('/cookie', (req, res) => {
         
       console.log('session cookie: ', sessionCookie)
       // Set cookie policy for session cookie and set in response.
-      const options = {maxAge: expiresIn, httpOnly: true, secure: true};
+      const options = {maxAge: expiresIn, httpOnly: true, secure: false};
       res.cookie('__session', sessionCookie, options)  //verify later
       res.end(JSON.stringify({status: 'success'}));
       
@@ -181,9 +181,7 @@ app.get('*', (req, res) => {
     } else {
       console.log('in file else ')
       //note: if extension is included in route, it probably will not hit this point. 
-      res.sendFile(
-        path.join(__dirname, '../dist/index.html'),
-      );
+      res.redirect('/');
     }
   });
 });
