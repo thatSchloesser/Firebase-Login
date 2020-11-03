@@ -24,11 +24,7 @@ app.use(cookieParser());
 
 // middleware to check cookie
 function checkCookieMiddleware(req, res, next) {
-  console.log('in middleware');
-  console.log(req);
-
   const sessionCookie = req.cookies.__session || '';
-
   admin
     .auth()
     .verifySessionCookie(sessionCookie, true)
@@ -47,7 +43,7 @@ function checkCookieMiddleware(req, res, next) {
 
 //send homepage (could use express.static)
 app.get('/', (req, res) => {
-  console.log('in /');
+  // console.log('in /');
   if (req.cookies.__session) {
     console.log('has cookie, redirecting to homepage');
     res.redirect('/routes/redirect');
@@ -66,7 +62,6 @@ app.get('/routes/redirect', checkCookieMiddleware, (req, res) => {
 //CREATE USER:
 app.post('/user', (req, res) => {
   console.log('in users post');
-  // console.log(req.body)
   const idToken = req.body.idToken;
   // idToken comes from the client app
   admin
@@ -84,8 +79,7 @@ app.post('/user', (req, res) => {
     .catch(function (error) {
       //user not verified error don't persist.
       console.log('error', error);
-      // unhandled promise rejection warning
-      //HANDLE THIS VIA RESOLVING OR SOMETHING. FIX WARNING>
+      //VERIFY FUNCTIONALITY
       res.sendStatus(401);
       Promise.resolve(error);
     })
@@ -100,7 +94,6 @@ app.post('/cookie', (req, res) => {
   console.log('in cookie\n', idToken);
 
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
-
   admin
     .auth()
     .verifyIdToken(idToken)
@@ -112,15 +105,32 @@ app.post('/cookie', (req, res) => {
       const options = { maxAge: expiresIn, httpOnly: true, secure: false };
       res.cookie('__session', sessionCookie, options); //verify later
       res.end(JSON.stringify({ status: 'success' }));
-
-      //unnecessary:
-      // admin.auth().verifyIdToken(idToken).then(function(decodedClaims) {
-      //   res.redirect('/newPage');
-      // });
     })
     .catch((error) => {
       console.log(error);
       res.status(401).send('UNAUTHORIZED REQUEST!');
+    });
+});
+
+app.post('/logout', (req, res) => {
+  console.log('in logout');
+  const sessionCookie = req.cookies.__session || '';
+  res.clearCookie('__session');
+  admin
+    .auth()
+    .verifySessionCookie(sessionCookie)
+    .then((decodedClaims) => {
+      console.log('DECODE CLAIMS:', decodedClaims);
+
+      return admin.auth().revokeRefreshTokens(decodedClaims.sub);
+    })
+    .then(() => {
+      console.log('cleared cookie access in firebase');
+      res.redirect('/'); //THIS ISN'T WORKING (no idea why), ROUTE CLIENT SIDE
+    })
+    .catch((error) => {
+      console.log('LOGOUT ERROR', error);
+      res.redirect('/');
     });
 });
 

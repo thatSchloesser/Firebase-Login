@@ -1,5 +1,8 @@
 console.log('hi');
 
 logout = function () {
-  console.log('hi');
+  axios.post('/logout').then(() => {
+    location.href = '/';
+  });
+  console.log('logout');
 };
