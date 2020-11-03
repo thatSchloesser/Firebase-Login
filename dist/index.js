@@ -1,6 +1,6 @@
 (function () {
-  console.log('hi from script');
-  console.log('cookies:', document.cookies);
+  // console.log('hi from script');
+  // console.log('cookies:', document.cookie);
 
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
@@ -16,6 +16,10 @@
 
   firebase.initializeApp(firebaseConfig);
   firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+
+  if (true) {
+    console.log('logged in?', firebase.auth().currentUser);
+  }
 
   var uiConfig = {
     callbacks: {
@@ -44,7 +48,7 @@
             }
           })
           .then(() => {
-            // location.href = '/routes/redirect';
+            location.href = '/routes/redirect';
             console.log('routed');
           })
           .catch(function (error) {
@@ -74,7 +78,7 @@
   var ui = new firebaseui.auth.AuthUI(firebase.auth());
   ui.start('#firebaseui-auth-container', uiConfig);
 
-  firebase.auth().onAuthStateChanged(function (user) {
-    console.log('AUTH STATE CHANGE');
-  });
+  // firebase.auth().onAuthStateChanged(function (user) {
+  //   console.log('AUTH STATE CHANGE');
+  // });
 })();
