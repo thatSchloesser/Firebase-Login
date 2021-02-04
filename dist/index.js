@@ -25,13 +25,17 @@
     callbacks: {
       // This method runs upon a successful login
       signInSuccessWithAuthResult: function (authResult) {
+        console.log('auth result', JSON.stringify(authResult));
         let idToken = null;
         let userInfo = authResult.additionalUserInfo;
+
         firebase
           .auth()
           .currentUser.getIdToken(true)
           .then((id) => {
+            //NOTE: THIS TOKEN DOES NOT EXIST IN THE 'authResult' object
             idToken = id;
+            console.log('idToken', id);
             return axios.post('/cookie', { idToken });
           })
           .then((cookie) => {
